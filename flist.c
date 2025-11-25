@@ -124,17 +124,69 @@ struct heap_block *remove(size_t size)
 {
   stkwrite("Remove: Start of remove function!\n");
 
-  //Case: size we are looking for matches size of the head node
-  if (size == clear_flag(head->size_and_flag))
+  //Case: size we are are looking for is found at the head node for free linked list
+  if (size <= clear_flag(head->size_and_flag))
   {
-    stkwrite("Remove: Great the head free block matches the size requested!\n");
+    stkwrite("Remove: Great! The head of the free linked list matches the size requested!\n");
+
     struct heap_block *removed = head;
+
+    //Before attemtping to return, check if the block can be split up to save memory
+    char split = memory_save(removed);
+
+    if (split)
+    {
+      stkwrite("Remove: We were able to split the heap_block!\n");
+    }
+    else
+    {
+      stkwrite("Remove: We were not able to split the heap_block\n");
+    }
+
+    //Update pointers and clear free flag
     head = head->next;
     removed->next = NULL;
-    
+    removed->size_and_flag = clear_flag(size_and_flag);
+
     return removed;
   }
 
+  struct heap_block *curr = head;
+
+  //Loop through the free linked list and find a free block that satisfies size requested
+  //I will be using a first fit approach for block finding
+  while (curr->next != NULL)
+  {
+    if (size < clear_flag(curr->size_and_flag))
+    {
+      stkwrite("Remove: I found a block that had your requested amount of space!\n");
+    
+      //Before attemtping to return, check if the block can be split up to save memory
+      char split = memory_save(curr);
+
+      if (split)
+      {
+        stkwrite("Remove: We were able to split heap_block!\n");
+      }
+      else
+      {
+        stkwrite("Remove: We were not able to split heap_block\n");
+      }
+      //Update pointers a clear free flag
+      curr->prev->next = curr->next;
+      curr->next->prev = curr->prev;
+      curr->next = NULL;
+      curr->prev = NULL;
+      removed->size_and_flag = clear_flag(size_and_flag);
+
+      return curr;
+    }
+  }
+  //Map more memory if not block satisfies user size request
+  //Note: This is not an error! We just need to map more memory.
+  stkwrite("I was not able to find a block with your requested size!\n");
+  stkwrite("I will mmap for more memory now!\n");
+  return NULL;
 }
 
 void merge_blocks(struct heap_block *node)

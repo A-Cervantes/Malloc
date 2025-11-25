@@ -19,5 +19,6 @@ struct heap_block {
 void insert(struct heap_block *node); //Insert a heap_block into free list
 struct heap_block *remove(size_t size); //Remove a heap_block from free list to be returned to the user
 void merge_blocks(struct heap_block *node); //Merge adjacent blocks together
+char memory_save(struct heap_block *node); //Splits heap_block if possible to be more memory efficent
 void stkprintf(void *mem_addr); //My own custom printf for memory addresses debugging 
 void stkwrite(char *message); //Wrapper around write() for easier message prints

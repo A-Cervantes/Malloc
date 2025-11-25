@@ -5,6 +5,7 @@
  * ==> My struct will not hold the size of a previous node
  * ==> To be more memory efficent size and flag are combined
  * ==> If not in the free list, the memory region for prev and next will be reused for user use
+ * ==> Total struct size: 32 bytes 
  */
 
 struct heap_block { 

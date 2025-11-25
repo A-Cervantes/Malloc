@@ -25,17 +25,23 @@ struct heap_block *head = NULL;
 * ==> My malloc will treat malloc(0) as an error and return NULL
 */
 
-void *malloc(size_t size) {
-  if (size == 0) {
-
+void *malloc(size_t size) 
+{
+  if (size == 0) 
+  {
+    //Treat as an Error [May change later]
+    return NULL;
   }
+
   //Size can't negative
-  if (size < 0) {
+  if (size < 0) 
+  {
     return NULL;
   }
   
   //A malloc of more than PTRDIFF_MAX is an error
-  if (size > PTRDIFF_MAX) {
+  if (size > PTRDIFF_MAX) 
+  {
     return NULL;
   }
 

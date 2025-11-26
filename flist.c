@@ -4,6 +4,8 @@
 
 //Macro function that extracts value of size, excluding the flag bit
 #define clear_flag(x) (x & ~1)
+#define METADATA_SIZE 16
+#define MIN_ALLOC 32
 
 //Head to the global free list
 extern struct heap_block *head;
@@ -55,6 +57,11 @@ void stkwrite(char *message)
 
 void insert(struct heap_block *node) 
 {
+  //Update the size to include + METADATA_SIZE && set free bit
+  //Note: This is needed for merging blocks together
+  node->size_and_flag += METADATA_SIZE;
+  node->size_and_flag |= 1;
+
   //Case: The free list is empty
   //Note: Size and memory field will be set prior to calling this
   if (head == NULL) 
@@ -146,7 +153,7 @@ struct heap_block *remove(size_t size)
     //Update pointers and clear free flag
     head = head->next;
     removed->next = NULL;
-    removed->size_and_flag = clear_flag(size_and_flag);
+    removed->size_and_flag = clear_flag(size_and_flag) - (METADATA_SIZE);
 
     return removed;
   }
@@ -177,7 +184,7 @@ struct heap_block *remove(size_t size)
       curr->next->prev = curr->prev;
       curr->next = NULL;
       curr->prev = NULL;
-      removed->size_and_flag = clear_flag(size_and_flag);
+      removed->size_and_flag = clear_flag(size_and_flag) - (METADATA_SIZE);
 
       return curr;
     }
@@ -188,8 +195,82 @@ struct heap_block *remove(size_t size)
   stkwrite("I will mmap for more memory now!\n");
   return NULL;
 }
+/*
+ * Function Notes
+ * ==> This function is called after remove, so size_and_flag will not include full metadata size
+ * ==> 
+ */
+
+char memory_save(struct heap_block *node, size_t requested_size)
+{
+  if (MIN_ALLOC < (clear_flag(node->size_and_flag) - requested_size))
+  {
+    stkwrite("memory_save: I can split up your current chunk to save space!\n");
+
+    //locate next struct location
+    struct heap_block *saved_chunk = node + requested + METADATA_SIZE;
+
+    saved_chunk->size_and_flag = node->size_and_flag - requested_size - METADATA_SIZE; 
+    saved_chunk->memory_location = node->memory_location + requested_size + METADATA_SIZE;
+    insert(saved_chunk);
+
+    return 1; //for true
+  }
+
+  stkwrite("Sorry this chunk can not be split!\n");
+
+  return 0; // for false
+}
+
+/*
+  * Function Notes
+  * ==> In function "insert"" I add METADATA_SIZE or 16 bytes to total size for heap_block
+  * ==> This was added since when "in use", the heap_block does not include METADATA_SIZE * 2 into its size
+  * ==> "In use" blocks would repurpose the memory location for next and prev pointer (since they are unused)
+  * ==> Thus, only half of whole struct metadata size is included, since pointer fields are technically "free" space
+  */
 
 void merge_blocks(struct heap_block *node)
 {
+  //Check if we can merge with the next node first
+  if (node->next != NULL  && (node->memory_location + clear_flag(node->size_and_flag)) == node->next->memory_location)
+  {
+    stkwrite("merge_blocks: We can merge the current node with next node together to make a mega block!\n");
 
+    //Update size of node and remove next node 
+    struct heap_block *infront = node->next;
+
+    node->size_and_flag += (clear_flag(infront->size_and_flag));
+    node->next = infront->next;
+    infront->next->prev = node;
+
+    //Disconnect the node
+    infront->next = NULL;
+    infront->prev = NULL;
+    infront->size_and_flag = 0;
+    infront->memory_location = 0;
+  }
+
+  //Check if we can merge with our prev node now
+  if (node->prev != NULL && (node->prev->memory_location + clear_flag(node->prev->size_and_flag)) == node->memory_location)
+  {
+    stkwrite("merge_blocks: We can merge the current node with the prev node together to make a mega block!");
+
+    //Update size of node and remove next node 
+    struct heap_block *backup = node->prev;
+
+    backup->size_and_flag += (clear_flag(node->size_and_flag));
+    backup->next = node->next;
+    node->next->prev = backup;
+
+    //Disconnect the node
+    node->next = NULL;
+    node->prev = NULL;
+    node->size_and_flag = 0;
+    node->memory_location = 0;
+
+  }
+
+  stkwrite("Done with merging blocks!\n")
+  return;
 }

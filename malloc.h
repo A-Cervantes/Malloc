@@ -9,7 +9,7 @@
  */
 
 struct heap_block { 
-  size_t size_and_flag; //Holds block size and "free or not" flag {Size does not include metadata size}
+  size_t size_and_flag; //Holds block size and "free or not" flag {size_and_flag only includes pointer memory region (16 bytes)}
   size_t memory_location; //Where it is in memory to aid with coalescing {Points to the start of the struct}
   struct free_block *prev; //Pointer to prev node
   struct free_block *next; //Pointer to next node
@@ -22,3 +22,7 @@ void merge_blocks(struct heap_block *node); //Merge adjacent blocks together
 char memory_save(struct heap_block *node, size_t requested_size); //Splits heap_block if possible to be more memory efficent
 void stkprintf(void *mem_addr); //My own custom printf for memory addresses debugging 
 void stkwrite(char *message); //Wrapper around write() for easier message prints
+
+//Functions for malloc and memory memory_location
+void *memory_spawn(size_t requested_size);
+

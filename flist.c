@@ -197,8 +197,9 @@ struct heap_block *remove(size_t size)
 }
 /*
  * Function Notes
- * ==> This function is called after remove, so size_and_flag will not include full metadata size
- * ==> 
+ * ==> This function is called after remove, so size_and_flag will not include full metadata size {only 16 bytes}
+ * ==> MIN_ALLOC is only 32 bytes since that is the full size for heap_block struct
+ * ==> 16 bytes gets reused when "in use" since pointer fields are not used
  */
 
 char memory_save(struct heap_block *node, size_t requested_size)
@@ -208,7 +209,7 @@ char memory_save(struct heap_block *node, size_t requested_size)
     stkwrite("memory_save: I can split up your current chunk to save space!\n");
 
     //locate next struct location
-    struct heap_block *saved_chunk = node + requested + METADATA_SIZE;
+    struct heap_block *saved_chunk = (char *)node + requested_size + METADATA_SIZE;
 
     saved_chunk->size_and_flag = node->size_and_flag - requested_size - METADATA_SIZE; 
     saved_chunk->memory_location = node->memory_location + requested_size + METADATA_SIZE;
@@ -228,6 +229,7 @@ char memory_save(struct heap_block *node, size_t requested_size)
   * ==> This was added since when "in use", the heap_block does not include METADATA_SIZE * 2 into its size
   * ==> "In use" blocks would repurpose the memory location for next and prev pointer (since they are unused)
   * ==> Thus, only half of whole struct metadata size is included, since pointer fields are technically "free" space
+  * ==> size_and_flag and memory_location are not accounted for size
   */
 
 void merge_blocks(struct heap_block *node)

@@ -16,8 +16,24 @@
 * ==> I want to improve in anyway I can so feedback is welcomed! 
 */
 
-//Head of free list 
-struct heap_block *head = NULL; 
+//Head of free list
+struct heap_block *head = NULL;
+
+//TODO: Finsh logic for memory mapping and initializing
+void *memory_spawn (size_t requested_space)
+{
+  if (head == NULL)
+  {
+    stkwrite("memory_spawn: This could be your first allocation!");
+
+    void *memory_find = mmap(NULL, );
+    if (memory_find == MAP_FAILED)
+    {
+      stkwrite("memory_spawn: mmap failed! Please check logic!\n")
+      return NULL;
+    }
+  }
+}
 
 /*
 * Function Notes
@@ -29,6 +45,7 @@ void *malloc(size_t size)
 {
   if (size == 0) 
   {
+    stkwrite("ERROR: You entered size as zero!\n");
     //Treat as an Error [May change later]
     return NULL;
   }
@@ -36,12 +53,14 @@ void *malloc(size_t size)
   //Size can't negative
   if (size < 0) 
   {
+    stkwrite("ERORR: you entered a size that is negative!\n");
     return NULL;
   }
   
   //A malloc of more than PTRDIFF_MAX is an error
   if (size > PTRDIFF_MAX) 
   {
+    stkwrite("ERROR: you entered a size that is too big to malloc!\n");
     return NULL;
   }
 
@@ -49,5 +68,6 @@ void *malloc(size_t size)
   size_t rounded_size = round16(size);
 
   //Call function to allocate heap memory
+  void *mmem = memory_spawn(rounded_size);
 
 }

@@ -29,7 +29,7 @@ void *memory_spawn (size_t requested_space)
     void *memory_find = mmap(NULL, );
     if (memory_find == MAP_FAILED)
     {
-      stkwrite("memory_spawn: mmap failed! Please check logic!\n")
+      stkwrite("memory_spawn: mmap failed! Please check logic!\n");
       return NULL;
     }
   }

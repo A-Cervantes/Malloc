@@ -32,7 +32,7 @@ struct heap_block *head = NULL;
  * ==> Thus, I can just focus on fusing those who are
  */
 
-struct heap_block *memory_spawn (size_t requested_space)
+struct heap_block *memory_spawn(size_t requested_space)
 {
   //Check first if we can find any heap_block that satisfies our requested_space
   struct heap_block free_find = remove(requested_space);
@@ -47,7 +47,7 @@ struct heap_block *memory_spawn (size_t requested_space)
   // ==> Thus I normalize the len to reflect the number of getpagesize() allocations we need
   size_t page_allocations = (requested_space + getpagesize() - 1) / getpagesize();
 
-  stkwrite("memory_spawn: I will allocated memory for you!\n");
+  stkwrite("memory_spawn: I will allocate memory for you!\n");
   puts(page_allocations + '0');
   puts('\n');
 
@@ -60,7 +60,9 @@ struct heap_block *memory_spawn (size_t requested_space)
 
   //Set up struct in new mmap memory
   struct heap_block *mapped = memory_find;
-  mapped->size_and_flag = requested_space; 
+
+  //Size would be total page_allocations minus METADATA_SIZE, since we reserve that space for meta data
+  mapped->size_and_flag = ((page_allocations * getpagesize()) - METADATA_SIZE);
   mapped->memory_location = memory_find;
 
   //memory_save will insert a new shortened struct for us (if allowed)
@@ -75,7 +77,7 @@ struct heap_block *memory_spawn (size_t requested_space)
   }
 
   //return mmaped space + METADATA_SIZE (to not override meta data information!)
-  return memory_find + METADATA_SIZE;
+  return mapped + METADATA_SIZE;
 }
 
 /*
@@ -89,11 +91,10 @@ void *malloc(size_t size)
   if (size == 0) 
   {
     stkwrite("ERROR: You entered size as zero!\n");
-    //Treat as an Error [May change later]
     return NULL;
   }
 
-  //Size can't negative
+  //Size can't be negative
   if (size < 0) 
   {
     stkwrite("ERORR: you entered a size that is negative!\n");
@@ -111,7 +112,7 @@ void *malloc(size_t size)
   //Add on METADATA_SIZE since it's constant for all heap_block
   size_t rounded_size = round16(size) + METADATA_SIZE;
 
-  //Call function to allocate heap memory
+  //Call function to get a heap_block that satisfies rounded_size
   struct heap_block *mmem = memory_spawn(rounded_size);
   if (mmem == NULL)
   {
@@ -121,4 +122,25 @@ void *malloc(size_t size)
 
   //memory_spawn already adds METADATA_SIZE offset so we can just return this to the user!
   return mmem;
+}
+
+
+void free(void *pointer)
+{
+  if (pointer == NULL)
+  {
+    stkwrite("ERROR: You passed in a NULL pointer to free!\n");
+    return;
+  }
+
+  //Add METADATA_SIZE to be inclusive of meta data region size
+  //Subtract METADATA_SIZE to start at beginning of struct
+  //These are to ensure correct memory calculations
+  pointer->size_and_flag += METADATA_SIZE;
+  insert(pointer - METADATA_SIZE);
+
+  stkwrite("Just added your heap_block into free linked list!\n");
+  stkwrite("Thank you!\n")
+
+  return;
 }

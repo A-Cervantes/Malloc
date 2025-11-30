@@ -1,7 +1,8 @@
 #include <sys/mman.h> //for PROT_WRITE, PROT_READ, mmap
 #include <stddef.h> //for size_t, NULL, PTRDIFF_MAX
-#include <unitstd.h> //for getpagesize()
+#include <unistd.h> //for getpagesize()
 #include <stdio.h> //for puts
+#include <stdint.h> //for PTRDIFF_MAX
 #include "malloc.h" //for free_block struct, and function declarations
 
 //Macro function for rounding up to a multiple of 16
@@ -35,7 +36,7 @@ struct heap_block *head = NULL;
 struct heap_block *memory_spawn(size_t requested_space)
 {
   //Check first if we can find any heap_block that satisfies our requested_space
-  struct heap_block free_find = remove(requested_space);
+  struct heap_block *free_find = remove_block(requested_space);
   if (free_find != NULL)
   {
     stkwrite("memory_spawn: found a block from our free linked list!\n");
@@ -48,10 +49,8 @@ struct heap_block *memory_spawn(size_t requested_space)
   size_t page_allocations = (requested_space + getpagesize() - 1) / getpagesize();
 
   stkwrite("memory_spawn: I will allocate memory for you!\n");
-  puts(page_allocations + '0');
-  puts('\n');
 
-  void *memory_find = mmap(NULL, page_allocations, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, -1, 0);
+  void *memory_find = mmap(NULL, page_allocations, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
   if (memory_find == MAP_FAILED)
   {
     stkwrite("memory_spawn: mmap failed! Please check logic!\n");
@@ -63,11 +62,11 @@ struct heap_block *memory_spawn(size_t requested_space)
 
   //Size would be total page_allocations minus METADATA_SIZE, since we reserve that space for meta data
   mapped->size_and_flag = ((page_allocations * getpagesize()) - METADATA_SIZE);
-  mapped->memory_location = memory_find;
+  mapped->memory_location = (size_t)memory_find;
 
   //memory_save will insert a new shortened struct for us (if allowed)
   char saved = memory_save(mapped, requested_space);
-  if (char) 
+  if (saved) 
   {
     stkwrite("memory_spawn: You saved memory!\n");
   }
@@ -88,19 +87,14 @@ struct heap_block *memory_spawn(size_t requested_space)
 
 void *malloc(size_t size) 
 {
+  stkwrite("Malloc: You are at the start of the malloc function!\n");
+
   if (size == 0) 
   {
     stkwrite("ERROR: You entered size as zero!\n");
     return NULL;
   }
 
-  //Size can't be negative
-  if (size < 0) 
-  {
-    stkwrite("ERORR: you entered a size that is negative!\n");
-    return NULL;
-  }
-  
   //A malloc of more than PTRDIFF_MAX is an error
   if (size > PTRDIFF_MAX) 
   {
@@ -119,6 +113,7 @@ void *malloc(size_t size)
     stkwrite("ERROR: mmap inside of memory_spawn failed!\n");
     return NULL;
   }
+  stkwrite("Malloc: You are leaving the malloc function!\n");
 
   //memory_spawn already adds METADATA_SIZE offset so we can just return this to the user!
   return mmem;
@@ -136,11 +131,15 @@ void free(void *pointer)
   //Add METADATA_SIZE to be inclusive of meta data region size
   //Subtract METADATA_SIZE to start at beginning of struct
   //These are to ensure correct memory calculations
-  pointer->size_and_flag += METADATA_SIZE;
-  insert(pointer - METADATA_SIZE);
+  char *backup_pointer = (char *)pointer - METADATA_SIZE;
+
+  struct heap_block *block_point = (struct heap_block *) backup_pointer;
+
+  block_point->size_and_flag += METADATA_SIZE;
+
+  insert(block_point);
 
   stkwrite("Just added your heap_block into free linked list!\n");
-  stkwrite("Thank you!\n")
+  stkwrite("Thank you!\n");
 
-  return;
 }

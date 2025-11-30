@@ -11,13 +11,13 @@
 struct heap_block { 
   size_t size_and_flag; //Holds block size and "free or not" flag {size_and_flag only includes pointer memory region (16 bytes)}
   size_t memory_location; //Where it is in memory to aid with coalescing {Points to the start of the struct}
-  struct free_block *prev; //Pointer to prev node
-  struct free_block *next; //Pointer to next node
+  struct heap_block *prev; //Pointer to prev node
+  struct heap_block *next; //Pointer to next node
 }__attribute__((packed));
 
 //Functions to help manage free list
 void insert(struct heap_block *node); //Insert a heap_block into free list
-struct heap_block *remove(size_t size); //Remove a heap_block from free list to be returned to the user
+struct heap_block *remove_block(size_t size); //Remove a heap_block from free list to be returned to the user
 void merge_blocks(struct heap_block *node); //Merge adjacent blocks together
 char memory_save(struct heap_block *node, size_t requested_size); //Splits heap_block if possible to be more memory efficent
 void stkprintf(void *mem_addr); //My own custom printf for memory addresses debugging 

@@ -24,5 +24,5 @@ void stkprintf(void *mem_addr); //My own custom printf for memory addresses debu
 void stkwrite(char *message); //Wrapper around write() for easier message prints
 
 //Functions for malloc and memory memory_location
-void *memory_spawn(size_t requested_size);
+struct heap_block *memory_spawn(size_t requested_size);
 

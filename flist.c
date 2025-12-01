@@ -7,7 +7,7 @@
 //Macro function that extracts value of size, excluding the flag bit
 #define clear_flag(x) (x & ~1)
 #define METADATA_SIZE 8
-#define MIN_ALLOC 32
+#define MIN_ALLOC 24
 
 //Head to the global free list
 extern struct heap_block *head;

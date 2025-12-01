@@ -10,7 +10,6 @@
 
 struct heap_block { 
   size_t size_and_flag; //Holds block size and "free or not" flag {size_and_flag only includes pointer memory region (16 bytes)}
-  size_t memory_location; //Where it is in memory to aid with coalescing {Points to the start of the struct}
   struct heap_block *prev; //Pointer to prev node
   struct heap_block *next; //Pointer to next node
 }__attribute__((packed));

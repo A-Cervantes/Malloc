@@ -7,7 +7,7 @@
 
 //Macro function for rounding up to a multiple of 16
 #define round16(x) ((x + 15) & ~15)
-#define METADATA_SIZE 16
+#define METADATA_SIZE 8
 
 /*
 * @Author: Angel Cervantes
@@ -50,7 +50,7 @@ struct heap_block *memory_spawn(size_t requested_space)
 
   stkwrite("memory_spawn: I will allocate memory for you!\n");
 
-  void *memory_find = mmap(NULL, page_allocations, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  void *memory_find = mmap(NULL, (page_allocations * getpagesize()), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
   if (memory_find == MAP_FAILED)
   {
     stkwrite("memory_spawn: mmap failed! Please check logic!\n");
@@ -62,7 +62,9 @@ struct heap_block *memory_spawn(size_t requested_space)
 
   //Size would be total page_allocations minus METADATA_SIZE, since we reserve that space for meta data
   mapped->size_and_flag = ((page_allocations * getpagesize()) - METADATA_SIZE);
-  mapped->memory_location = (size_t)memory_find;
+  stkwrite("This is memory_location -->    ");
+  stkprintf((void *)mapped);
+  stkwrite("\n");
 
   //memory_save will insert a new shortened struct for us (if allowed)
   char saved = memory_save(mapped, requested_space);
@@ -76,7 +78,7 @@ struct heap_block *memory_spawn(size_t requested_space)
   }
 
   //return mmaped space + METADATA_SIZE (to not override meta data information!)
-  return mapped + METADATA_SIZE;
+  return (struct heap_block *)((char *)mapped + 8);
 }
 
 /*
@@ -91,7 +93,7 @@ void *malloc(size_t size)
 
   if (size == 0) 
   {
-    stkwrite("ERROR: You entered size as zero!\n");
+    stkwrite("ERROR: You entered size as zero! Returning NULL!\n");
     return NULL;
   }
 
@@ -122,24 +124,48 @@ void *malloc(size_t size)
 
 void free(void *pointer)
 {
+  stkwrite("Free: This is the start of the free function!\n");
+
   if (pointer == NULL)
   {
     stkwrite("ERROR: You passed in a NULL pointer to free!\n");
     return;
   }
 
+  stkwrite("Free: Pointer before metadata adjustment: ");
+  stkprintf(pointer);
+  stkwrite("\n");
+
   //Add METADATA_SIZE to be inclusive of meta data region size
   //Subtract METADATA_SIZE to start at beginning of struct
   //These are to ensure correct memory calculations
-  char *backup_pointer = (char *)pointer - METADATA_SIZE;
+  //char *backup_pointer = (char *)pointer - METADATA_SIZE;
 
-  struct heap_block *block_point = (struct heap_block *) backup_pointer;
+  //stkwrite("Free: Backup pointer after adjustment: ");
+  //stkprintf(backup_pointer);
+  //stkwrite("\n");
+  
+  struct heap_block *block_point = (struct heap_block *)((char *)pointer - 8);
+
+  if (block_point == NULL)
+  {
+    stkwrite("Free: The adjusted struct pointer is NULL!\n");
+    return;
+  }
+
+  stkwrite("Free: Block address: ");
+  stkprintf(block_point);
+  stkwrite("\n");
 
   block_point->size_and_flag += METADATA_SIZE;
+
+  stkwrite("Free: This is the size_and_flag value for memory_location ---> ");
+  stkprintf((void *) block_point->size_and_flag);
+  stkwrite("\n");
 
   insert(block_point);
 
   stkwrite("Just added your heap_block into free linked list!\n");
-  stkwrite("Thank you!\n");
+  stkwrite("Thank you!\n\n\n\n");
 
 }

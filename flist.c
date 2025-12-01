@@ -3,6 +3,7 @@
 #include "malloc.h" //for heap_block struct, function declarations
 #include <stdint.h> //for uintptr_t
 #include <string.h> //for strlen
+#include <stdio.h> //for snprintf
 
 //Macro function that extracts value of size, excluding the flag bit
 #define clear_flag(x) (x & ~1)
@@ -45,6 +46,15 @@ void stkprintf(void *mem_addr)
 
   //Write out the memory address
   write(STDOUT_FILENO, buffer, len);
+}
+
+//Prints size_and_flag to see numerical value
+void print_digits(int num) 
+{
+    char str[32];
+    snprintf(str, sizeof(str), "%d", num);
+    stkwrite(str);
+
 }
 
 /*
@@ -173,6 +183,7 @@ void insert(struct heap_block *node)
 /*
  * Function Notes
  * ==> size is composed of user requested size + METADATA_SIZE (conforming with memory_spawn)
+ * ==> blocks removed point to start of struct, so + METADATA_SIZE must be added on to it when extracted
  */
 
 struct heap_block *remove_block(size_t size)
@@ -215,7 +226,7 @@ struct heap_block *remove_block(size_t size)
     stkprintf(removed);
     stkwrite("\n");
 
-    return removed;
+    return (struct heap_block *)((char *)removed + METADATA_SIZE);
   }
 
   struct heap_block *curr = head;
@@ -258,7 +269,7 @@ struct heap_block *remove_block(size_t size)
       stkwrite("\n");
 
 
-      return curr;
+      return (struct heap_block *)((char *)curr + METADATA_SIZE);
     }
     curr = curr->next;
   }

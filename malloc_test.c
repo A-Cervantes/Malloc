@@ -1,6 +1,7 @@
 #include <stdlib.h>//for malloc
 #include <stddef.h>//for NULL
 #include <stdio.h>//for printf
+#include <unistd.h>//for write
 
 int main (void) 
 {
@@ -10,9 +11,19 @@ int main (void)
     return -10;
   }
 
-  printf("YAY! We passed!\n");
+  write(1,"\n\n\n\n\n", 5);
+
+  char *shadow2 = malloc(152);
+  if (shadow2 ==  NULL)
+  {
+    return -20;
+  }
+
+  write(1,"\n\n\n\n\n", 5);
 
   free(shadow);
 
-  return 20;
+  free(shadow2);
+
+  return 30;
 }

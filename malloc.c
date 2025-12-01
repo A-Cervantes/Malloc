@@ -135,32 +135,17 @@ void free(void *pointer)
   stkwrite("Free: Pointer before metadata adjustment: ");
   stkprintf(pointer);
   stkwrite("\n");
-
-  //Add METADATA_SIZE to be inclusive of meta data region size
-  //Subtract METADATA_SIZE to start at beginning of struct
-  //These are to ensure correct memory calculations
-  //char *backup_pointer = (char *)pointer - METADATA_SIZE;
-
-  //stkwrite("Free: Backup pointer after adjustment: ");
-  //stkprintf(backup_pointer);
-  //stkwrite("\n");
   
-  struct heap_block *block_point = (struct heap_block *)((char *)pointer - 8);
-
-  if (block_point == NULL)
-  {
-    stkwrite("Free: The adjusted struct pointer is NULL!\n");
-    return;
-  }
+  struct heap_block *block_point = (struct heap_block *)((char *)pointer - METADATA_SIZE);
 
   stkwrite("Free: Block address: ");
   stkprintf(block_point);
   stkwrite("\n");
 
-  block_point->size_and_flag += METADATA_SIZE;
+  //block_point->size_and_flag += METADATA_SIZE;
 
-  stkwrite("Free: This is the size_and_flag value for memory_location ---> ");
-  stkprintf((void *) block_point->size_and_flag);
+  stkwrite("Free: This is the size_and_flag value for memory_location (digits)---> ");
+  print_digits(block_point->size_and_flag);
   stkwrite("\n");
 
   insert(block_point);

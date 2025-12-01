@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stddef.h> //for size_t
 
 /*
@@ -21,6 +23,7 @@ void merge_blocks(struct heap_block *node); //Merge adjacent blocks together
 char memory_save(struct heap_block *node, size_t requested_size); //Splits heap_block if possible to be more memory efficent
 void stkprintf(void *mem_addr); //My own custom printf for memory address debugging 
 void stkwrite(char *message); //Wrapper around write() for easier message prints
+void print_digits(int num);
 
 //Functions for malloc 
 struct heap_block *memory_spawn(size_t requested_size);

@@ -4,7 +4,7 @@
 
 int main (void) 
 {
-  char *shadow = malloc(100);
+  char *shadow = malloc(16);
   if (shadow == NULL)
   {
     return -10;

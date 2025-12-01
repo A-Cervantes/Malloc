@@ -29,20 +29,22 @@ void stkprintf(void *mem_addr)
   char buffer[20];
   char *hex = "0123456789abcdef";
 
+  uintptr_t addr = (uintptr_t)mem_addr;
+
   //Loop backwards, read each byte at a time, store in buffer
   int len = 0;
-  for (int i = sizeof(void*) * 2 - 1; i >= 0; --i)
+  for (int i = (sizeof(void*) * 2) - 1; i >= 0; --i)
   {
-      buffer[i] = hex[(uintptr_t)mem_addr % 16];
-      mem_addr = (void*)((uintptr_t)mem_addr / 16);
+      buffer[i] = hex[addr % 16];
+      addr /= 16;
       len++;
   }
 
   buffer[0] = '0';
-  buffer[1] = 'X';
+  buffer[1] = 'x';
 
   //Write out the memory address
-  write(STDOUT_FILENO, buffer, len + 2);
+  write(STDOUT_FILENO, buffer, len);
 }
 
 /*
@@ -326,7 +328,13 @@ void merge_blocks(struct heap_block *node)
     stkwrite("Merge_blocks: ERROR! You passed in NULL to merge blocks!\n");
     return;
   }
-
+  //for debugging
+  if (node->next != NULL)
+  {
+    stkwrite("Merge_blocks: This is the memory_address of node->next -->  ");
+    stkprintf(node->next);
+    stkwrite("\n");
+  }
   //Check if we can merge with the next node first
   if (node->next != NULL && (node + clear_flag(node->size_and_flag)) == node->next)
   {
@@ -347,6 +355,13 @@ void merge_blocks(struct heap_block *node)
     infront->next = NULL;
     infront->prev = NULL;
     infront->size_and_flag = 0;
+  }
+
+  //for debugging
+  if (node->prev != NULL){
+    stkwrite("Merge_blocks: This is the memory_address of node->next -->  ");
+    stkprintf(node->prev);
+    stkwrite("\n");
   }
 
   //Check if we can merge with our prev node now

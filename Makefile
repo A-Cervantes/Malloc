@@ -14,6 +14,8 @@ $(SO_TARGET): $(OBJ)
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+test:
+	$(CC) $(CFLAGS) malloc_test.c -o mtest
 clean:
-	rm -f $(OBJ) $(SO_TARGET)
+	rm -f $(OBJ) $(SO_TARGET) mtest
 

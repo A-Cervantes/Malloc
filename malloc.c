@@ -21,7 +21,7 @@
 * ==> I want to improve in anyway I can so feedback is welcomed! 
 */
 
-//Head of free list
+//Head of free linked list
 struct heap_block *head = NULL;
 
 /*
@@ -78,7 +78,7 @@ struct heap_block *memory_spawn(size_t requested_space)
   }
 
   //return mmaped space + METADATA_SIZE (to not override meta data information!)
-  return (struct heap_block *)((char *)mapped + 8);
+  return (struct heap_block *)((char *)mapped + METADATA_SIZE);
 }
 
 /*
@@ -121,7 +121,6 @@ void *malloc(size_t size)
   return mmem;
 }
 
-
 void free(void *pointer)
 {
   stkwrite("Free: This is the start of the free function!\n");
@@ -142,6 +141,7 @@ void free(void *pointer)
   stkprintf(block_point);
   stkwrite("\n");
 
+  //TODO:: ENSURE PROPER ADDITION SO MERGE WORKS AS INTENDED
   //block_point->size_and_flag += METADATA_SIZE;
 
   stkwrite("Free: This is the size_and_flag value for memory_location (digits)---> ");

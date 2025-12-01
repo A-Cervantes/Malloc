@@ -283,7 +283,7 @@ struct heap_block *remove_block(size_t size)
  * Function Notes
  * ==> This function is called after remove and memory_spawn which subtract - METADATA_SIZE from size_and_flag
  * ==> Hence, size_and_flag only represents useable memory space that the user can use
- * ==> MIN_ALLOC is only 32 bytes since that is the full size for a heap_block struct
+ * ==> MIN_ALLOC is only 24 bytes since that is the full size for a heap_block struct
  * ==> 16 bytes get reused when heap_block "in use" since pointer fields become NULL
  */
 
@@ -325,9 +325,9 @@ char memory_save(struct heap_block *node, size_t requested_size)
 /*
   * Function Notes
   * ==> merge_blocks is only called in insert
-  * ==> size_and_flag includes usable user memory space (this includes pointer memory regions for prev and next)
+  * ==> size_and_flag includes useable user memory space (this includes pointer memory regions for prev and next)
   * ==> Inserted heap_blocks will also have + METADATA_SIZE added to ensure correct grouping for heap blocks
-  * ==> In all other cases size_and_flag would only includes useable space for user
+  * ==> In all other cases size_and_flag would only include useable user space
   */
 
 void merge_blocks(struct heap_block *node)
@@ -339,6 +339,7 @@ void merge_blocks(struct heap_block *node)
     stkwrite("Merge_blocks: ERROR! You passed in NULL to merge blocks!\n");
     return;
   }
+
   //for debugging
   if (node->next != NULL)
   {
@@ -369,7 +370,8 @@ void merge_blocks(struct heap_block *node)
   }
 
   //for debugging
-  if (node->prev != NULL){
+  if (node->prev != NULL)
+  {
     stkwrite("Merge_blocks: This is the memory_address of node->next -->  ");
     stkprintf(node->prev);
     stkwrite("\n");

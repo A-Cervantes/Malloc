@@ -4,6 +4,8 @@
 #include <stdio.h> //for puts
 #include <stdint.h> //for PTRDIFF_MAX
 #include "malloc.h" //for free_block struct, and function declarations
+#include <string.h> //for memcpy
+#include <limits.h> //for SIZE_MAX
 
 //Macro function for rounding up to a multiple of 16
 #define round16(x) ((x + 15) & ~15)
@@ -152,5 +154,106 @@ void free(void *pointer)
 
   stkwrite("Just added your heap_block into free linked list!\n");
   stkwrite("Thank you!\n\n\n\n");
+
+}
+
+void *realloc(void *p, size_t size)
+{
+
+  if (p == NULL)
+  {
+    stkwrite("Realloc: Pointer p is equal to NULL!\n");
+    
+    return malloc(size);
+  }
+
+  if (p != NULL && size == 0)
+  { 
+    stkwrite("Realloc: Pointer p is not null and size is 0! Freeing!\n");
+
+ 
+    free(p); 
+
+    return NULL;
+  }
+
+  //Adjust to point before metadata
+  struct heap_block *current_heap_block = (struct heap_block *)((char *)p - METADATA_SIZE);
+
+  size_t block_size = current_heap_block->size_and_flag;
+
+  if (block_size < size)
+  {
+    stkwrite("Realloc: Growing the size of your current memory block!\n");
+    
+    void *biggerBlock = malloc(size);
+
+    if (biggerBlock == NULL)
+    {
+      return NULL;
+    }
+
+    //Memcpy old data into new block
+    memcpy(biggerBlock, current_heap_block, block_size);
+
+    //Free the old block
+    free(p);
+
+    return biggerBlock;
+  }
+
+  else
+  {
+    stkwrite("Realloc: Shrinking the size of your current memory block!\n");
+
+    void *smallerBlock = malloc(size);
+
+    if (smallerBlock == NULL)
+    {
+      return NULL;
+    }
+
+    //Memcpy old data into new block
+    memcpy(smallerBlock, current_heap_block, size);
+
+    //Free the old block
+    free(p);
+
+    return smallerBlock;
+  }
+
+  //This should never reach
+  stkwrite("Realloc: ERROR! This should never reach!");
+  return NULL;
+}
+
+void *calloc(size_t n, size_t size)
+{
+  if (n == 0 || size == 0)
+  {
+    //Calloc must return a "unique pointer" that can be passed to free
+    return malloc(1);
+  }
+
+  if ((n * size) > SIZE_MAX)
+  {
+    stkwrite("Calloc: Your input surpasses the maximum amount!\n");
+
+    return NULL;
+  }
+
+  //Malloc memory and then zero it out
+  void *zeroOut = malloc(n * size);
+  
+  if (zeroOut == NULL)
+  {
+    stkwrite("Calloc: ERROR! Malloc failed!\n");
+    
+    return NULL;
+  }
+
+  memset(zeroOut, 0, n * size);
+
+  return zeroOut;
 
 }

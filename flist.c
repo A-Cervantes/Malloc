@@ -347,7 +347,7 @@ void merge_blocks(struct heap_block *node)
     stkwrite("\n");
   }
   //Check if we can merge with the next node first
-  if (node->next != NULL && (node + clear_flag(node->size_and_flag)) == node->next)
+  if (node->next != NULL && ((char *)node + clear_flag(node->size_and_flag)) == (char *)node->next)
   {
     stkwrite("merge_blocks: We can merge the current node with next node together to make a mega block!\n");
 
@@ -370,15 +370,15 @@ void merge_blocks(struct heap_block *node)
 
   //for debugging
   if (node->prev != NULL){
-    stkwrite("Merge_blocks: This is the memory_address of node->next -->  ");
+    stkwrite("Merge_blocks: This is the memory_address of node->prev -->  ");
     stkprintf(node->prev);
     stkwrite("\n");
   }
 
   //Check if we can merge with our prev node now
-  if (node->prev != NULL && (node->prev + clear_flag(node->prev->size_and_flag)) == node)
+  if (node->prev != NULL && ((char *)node->prev + clear_flag(node->prev->size_and_flag)) == (char *)node)
   {
-    stkwrite("merge_blocks: We can merge the current node with the prev node together to make a mega block!");
+    stkwrite("merge_blocks: We can merge the current node with the prev node together to make a mega block!\n");
 
     //Update size of node and remove next node 
     struct heap_block *backup = node->prev;
@@ -396,7 +396,10 @@ void merge_blocks(struct heap_block *node)
     node->prev = NULL;
     node->size_and_flag = 0;
   }
-
+  stkwrite("This is the final value of the new head --> ");
+  print_digits(head->size_and_flag);
+  stkwrite("\n");
+  stkprintf(head->next);
   stkwrite("Done with merging blocks!\n");
   return;
 }

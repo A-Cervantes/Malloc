@@ -2,28 +2,27 @@
 #include <stddef.h>//for NULL
 #include <stdio.h>//for printf
 #include <unistd.h>//for write
+#include <string.h> //for strlen
 
-int main (void) 
+int main(void)
 {
-  char *shadow = malloc(16);
-  if (shadow == NULL)
+  char *pointer1 = malloc(42);
+  if (pointer1 == NULL)
   {
-    return -10;
+    char *mes = "Pointer 1 failed and returned NULL\n";
+    write(1, mes, strlen(mes));
+    return -1;
   }
 
-  write(1,"\n\n\n\n\n", 5);
-
-  char *shadow2 = malloc(152);
-  if (shadow2 ==  NULL)
+  char *pointer2 = malloc(168);
+  if (pointer2 == NULL)
   {
-    return -20;
+    char *mes2 = "Pointer 2 failed returned NULL\n";
+    write(1, mes2, strlen(mes2));
   }
 
-  write(1,"\n\n\n\n\n", 5);
+  free(pointer1);
+  free(pointer2);
 
-  free(shadow);
-
-  free(shadow2);
-
-  return 30;
+  return 88;
 }

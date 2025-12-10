@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -g -fPIC -Wextra
+CFLAGS = -Wall -g -fPIC -Wextra -ldl -Werror
 LDFLAGS = -shared
 
 SRC = malloc.c flist.c

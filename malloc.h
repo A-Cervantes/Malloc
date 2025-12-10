@@ -5,13 +5,13 @@
 /*
  * Struct Notes
  * ==> My struct will not hold the size of a previous node
- * ==> To be more memory efficent size and flag are combined
+ * ==> To be more memory efficent size and free flag are combined
  * ==> If not in the free list, the memory region for prev and next will be reused for user use
  * ==> Total struct size: 24 bytes 
  */
 
 struct heap_block { 
-  size_t size_and_flag; //Holds block size and free flag {size_and_flag only includes pointer memory region (16 bytes)}
+  size_t size_and_flag; //Holds block size and free flag
   struct heap_block *prev; //Pointer to prev node
   struct heap_block *next; //Pointer to next node
 }__attribute__((packed));
@@ -23,7 +23,7 @@ void merge_blocks(struct heap_block *node); //Merge adjacent blocks together
 char memory_save(struct heap_block *node, size_t requested_size); //Splits heap_block if possible to be more memory efficent
 void stkprintf(void *mem_addr); //My own custom printf for memory address debugging 
 void stkwrite(char *message); //Wrapper around write() for easier message prints
-void print_digits(int num);
+void print_digits(int num); //Wrapper around snprintf to print numbers
 
 //Functions for malloc 
 struct heap_block *memory_spawn(size_t requested_size);

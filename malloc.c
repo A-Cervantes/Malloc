@@ -61,10 +61,10 @@ struct heap_block *memory_spawn(size_t requested_space)
   //Set up struct in new mmap memory
   struct heap_block *mapped = memory_find;
 
-  //Size would be total page_allocations minus METADATA_SIZE, since we reserve that space for metadata
-  mapped->size_and_flag = ((page_allocations * getpagesize()) - METADATA_SIZE);
+  //Make the mapped size_and_flag equal to the number of pages we normalized
+  mapped->size_and_flag = ((page_allocations * getpagesize()));
 
-  //memory_save will insert a new shortened struct for us (if allowed)
+  //memory_save will insert a new shortened struct for us 
   memory_save(mapped, requested_space);
 
   //return mmaped space + METADATA_SIZE (to not override meta data information!)

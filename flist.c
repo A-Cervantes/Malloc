@@ -48,18 +48,12 @@ void stkprintf(void *mem_addr)
   write(STDOUT_FILENO, buffer, len);
 }
 
-//Prints size_and_flag to see numerical value
 void print_digits(int num) 
 {
     char str[32];
     snprintf(str, sizeof(str), "%d", num);
     stkwrite(str);
 }
-
-/*
- * Function Notes
- * ==> Custom printf for regular messages
- */
 
 void stkwrite(char *message)
 {
@@ -71,7 +65,6 @@ void stkwrite(char *message)
   * ==> I will be sorting the free list based on memory location
   * ==> Consequently, free block look up time will effected
   * ==> The size_and_flag field will be set prior to calling this function
-  * ==> size_and_flag will be composed of user space + METADATA_SIZE
   * ==> Inserted heap_block will start at an offset of 0, NOT by + METADATA_SIZE
   */
 
@@ -83,10 +76,10 @@ void insert(struct heap_block *node)
     return;
   }
 
-  //Set the free flag and ensure that node pointers are NULL
+  //Set the free flag
   node->size_and_flag |= 1;
 
-  //Case: The free list is empty
+  //The free list is empty
   if (head == NULL) 
   {
     stkwrite("Insert: Head is NULL! Making this block the head!\n");
@@ -98,7 +91,7 @@ void insert(struct heap_block *node)
     return;
   }
 
-  //Case: The inserted block's memory location comes before the current heads memory location
+  //The inserted block's memory location comes before the current heads memory location
   if ((uintptr_t)node < (uintptr_t)head)
   {
     stkwrite("Insert: Your inserted block will now be the new head!\n");
@@ -108,6 +101,7 @@ void insert(struct heap_block *node)
     head->prev = node;
     head = node;
 
+    //Attempt to merge blocks together
     merge_blocks(node);
 
     return;
@@ -127,7 +121,7 @@ void insert(struct heap_block *node)
       curr->next->prev = node;
       curr->next = node;
 
-      //Attempt to merge blocks together if they are in continuous memory
+      //Attempt to merge blocks together
       merge_blocks(node);
 
       return;
@@ -138,6 +132,7 @@ void insert(struct heap_block *node)
 
   //Case: Block must be inserted at the end of the free list
   stkwrite("Insert: I am adding your block to the end of the free list!\n");
+
   curr->next = node;
   node->next = NULL;
   node->prev = curr;
@@ -156,18 +151,16 @@ void insert(struct heap_block *node)
 
 struct heap_block *remove_block(size_t size)
 {
-  stkwrite("Remove: Start of remove function!\n");
-
   if (head == NULL)
   {
     stkwrite("Remove: Head is NULL!\n");
     return NULL;
   }
 
-  //Case: size we are are looking for is found at the head node for free linked list
+  //Size we are are looking for is satisfied by the head node for free linked list
   if (size <= clear_flag(head->size_and_flag) - METADATA_SIZE)
   {
-    stkwrite("Remove: Great! The head of the free linked list satisfies the size requested!\n");
+    stkwrite("Remove: Great! The head of the free list satisfies the size requested!\n");
 
     struct heap_block *removed = head;
 
@@ -205,7 +198,7 @@ struct heap_block *remove_block(size_t size)
       //Before attemtping to return, check if the block can be split up to save memory
       memory_save(curr, size);
 
-      //Update pointers a clear free flag
+      //Update pointers and clear free flag
       curr->prev->next = curr->next;
       curr->next->prev = curr->prev;
       curr->next = NULL;
@@ -222,14 +215,13 @@ struct heap_block *remove_block(size_t size)
   //Note: This is not an error! We just need to map more memory.
   stkwrite("I was not able to find a block with your requested size!\n");
   stkwrite("I will mmap for more memory now!\n");
+
   return NULL;
 }
 
 /*
  * Function Notes
- * ==> This function is called after remove and memory_spawn which subtract - METADATA_SIZE from size_and_flag
- * ==> Hence, size_and_flag only represents useable memory space that the user can use
- * ==> MIN_ALLOC is only 32 bytes since that is the full size for a heap_block struct
+ * ==> MIN_ALLOC is only 24 bytes since that is the full size for a heap_block struct
  * ==> 16 bytes get reused when heap_block "in use" since pointer fields become NULL
  */
 
@@ -249,12 +241,8 @@ char memory_save(struct heap_block *node, size_t requested_size)
     //requested_size is already user requested memory + METADATA_SIZE
     struct heap_block *saved_chunk = (struct heap_block *)((char *)node + requested_size);
 
-    stkwrite("This is the block that we created to save space -->  ");
-    stkprintf(saved_chunk);
-    stkwrite("\n");
-
-    //Add METADATA_SIZE since size_and_flag does not include it but requested_size does
-    saved_chunk->size_and_flag = clear_flag(node->size_and_flag) - requested_size; // + METADATA_SIZE
+    //Set the size of the block
+    saved_chunk->size_and_flag = clear_flag(node->size_and_flag) - requested_size; 
 
     //update the node size 
     node->size_and_flag = requested_size;
@@ -264,7 +252,7 @@ char memory_save(struct heap_block *node, size_t requested_size)
     return 1; //for true
   }
 
-  stkwrite("Sorry this chunk can not be split!\n");
+  stkwrite("Sorry this heap_block could not be split!\n");
   return 0; // for false
 }
 
@@ -273,13 +261,10 @@ char memory_save(struct heap_block *node, size_t requested_size)
   * ==> merge_blocks is only called in insert
   * ==> size_and_flag includes usable user memory space (this includes pointer memory regions for prev and next)
   * ==> Inserted heap_blocks will also have + METADATA_SIZE added to ensure correct grouping for heap blocks
-  * ==> In all other cases size_and_flag would only includes useable space for user
   */
 
 void merge_blocks(struct heap_block *node)
 {
-  stkwrite("Merge_blocks: This is the start of merge_blocks!\n");
-
   if (node == NULL)
   {
     stkwrite("Merge_blocks: ERROR! You passed in NULL to merge blocks!\n");
@@ -289,9 +274,7 @@ void merge_blocks(struct heap_block *node)
   //Check if we can merge with the next node first
   if (node->next != NULL && ((char *)node + clear_flag(node->size_and_flag)) == (char *)node->next)
   {
-    stkwrite("merge_blocks: We can merge the current node with next node together to make a mega block!\n");
-
-    //Update size of node and remove next node 
+    //Update size of node and remove next node
     struct heap_block *infront = node->next;
 
     node->size_and_flag += (clear_flag(infront->size_and_flag));
@@ -311,9 +294,7 @@ void merge_blocks(struct heap_block *node)
   //Check if we can merge with our prev node now
   if (node->prev != NULL && ((char *)node->prev + clear_flag(node->prev->size_and_flag)) == (char *)node)
   {
-    stkwrite("merge_blocks: We can merge the current node with the prev node together to make a mega block!\n");
-
-    //Update size of node and remove next node 
+    //Update size of node and remove next node
     struct heap_block *backup = node->prev;
 
     backup->size_and_flag += (clear_flag(node->size_and_flag));

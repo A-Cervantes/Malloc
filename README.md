@@ -15,7 +15,9 @@
 4. You can also create your own programs that call or use malloc and pass the executable
    as the argument after LD_PRELOAD. Run ./mtest to use my simple test!
 
-5. Have fun :)!
+5. make clean ; clear
+
+6. Repeat and have fun! :)!
 ```
 
 ## Purpose
